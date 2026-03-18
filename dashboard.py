@@ -5,7 +5,7 @@ import plotly.express as px
 import numpy as np
 from scipy.ndimage import uniform_filter1d
 
-st.set_page_config(page_title="ARGO Dashboard", layout="wide", page_icon= favicon.png)
+st.set_page_config(page_title="ARGO Dashboard", layout="wide", page_icon= "favicon.png")
 
 st.markdown("""
 <style>

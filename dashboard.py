@@ -69,19 +69,18 @@ def hex_to_rgba(hex_color, alpha=0.15):
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
     return f"rgba({r},{g},{b},{alpha})"
 
-# Mobile-friendly chart base — smaller margins, smaller fonts
 CHART_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(15,25,35,0.85)",
     font=dict(color="#c9d6e3", family="Inter, sans-serif", size=11),
     legend=dict(
-        bgcolor="rgba(0,0,0,0)", bordercolor="#1f3a5f", borderwidth=1,
+        bgcolor="rgba(20,35,55,0.85)", bordercolor="#1f3a5f", borderwidth=1,
         font=dict(size=11),
-        orientation="h",          # horizontal legend — fits mobile width
-        yanchor="bottom", y=1.02,
-        xanchor="left",   x=0,
+        orientation="v",
+        yanchor="top", y=0.99,
+        xanchor="right", x=0.99,
     ),
-    margin=dict(l=50, r=15, t=50, b=55),  # tighter margins for mobile
+    margin=dict(l=50, r=15, t=50, b=55),  
 )
 AXIS_STYLE = dict(gridcolor="#1a3050", linecolor="#2a4a6f",
                   zerolinecolor="#1f3a5f", tickfont=dict(size=10))
@@ -99,8 +98,6 @@ def load_data():
 
 
 df = load_data()
-
-# ── Sidebar ────────────────────────────────────────────────────────────────────
 st.sidebar.header("🔧 Filters")
 regions = st.sidebar.multiselect(
     "Select Region",
@@ -111,7 +108,6 @@ years = sorted(df["year"].dropna().astype(int).unique())
 selected_year = st.sidebar.selectbox("Select Year", options=["All"] + years)
 parameter = st.sidebar.radio("Select Parameter", ["Temperature", "Salinity"])
 
-# ── Filter ─────────────────────────────────────────────────────────────────────
 filtered_df = df[df["region"].isin(regions)].copy()
 if selected_year != "All":
     filtered_df = filtered_df[filtered_df["year"] == selected_year]
@@ -119,7 +115,6 @@ if selected_year != "All":
 param_col  = "temperature" if parameter == "Temperature" else "salinity"
 param_unit = "°C"          if parameter == "Temperature" else "PSU"
 
-# ── Metrics — 2x2 on mobile, 4 cols on desktop ────────────────────────────────
 st.markdown("### 📌 Overview")
 r1c1, r1c2 = st.columns(2)
 r2c1, r2c2 = st.columns(2)
@@ -139,7 +134,6 @@ for col, label, val in zip(
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("---")
 
-# ── Map ────────────────────────────────────────────────────────────────────────
 st.subheader("🌍 Float Locations")
 map_df = filtered_df.dropna(subset=["latitude", "longitude"])
 if len(map_df) > 3000:
@@ -153,7 +147,7 @@ fig_map = px.scatter_map(
 )
 fig_map.update_layout(
     map_style="open-street-map",
-    height=350,                    # shorter on mobile
+    height=350,                   
     margin=dict(l=0, r=0, t=0, b=0),
     legend=dict(
         orientation="h", yanchor="top", y=0.99,
@@ -165,11 +159,9 @@ fig_map.update_traces(marker=dict(size=5, opacity=0.75))
 st.plotly_chart(fig_map, use_container_width=True)
 st.markdown("---")
 
-# ── Analysis ───────────────────────────────────────────────────────────────────
 st.subheader(f"📊 {parameter} Analysis")
 tab1, tab2, tab3 = st.tabs(["🌡 Profile vs Depth", "📦 By Region", "📈 Yearly Trend"])
 
-# ── Tab 1 ──────────────────────────────────────────────────────────────────────
 with tab1:
     fig1 = go.Figure()
     smooth_size = 15 if param_col == "salinity" else 5
@@ -229,7 +221,6 @@ with tab1:
     st.plotly_chart(fig1, use_container_width=True)
     st.caption("X = Depth | Y = " + parameter + " | Band = IQR")
 
-# ── Tab 2 ──────────────────────────────────────────────────────────────────────
 with tab2:
     fig2 = go.Figure()
     for region in sorted(filtered_df["region"].dropna().unique()):
@@ -256,7 +247,6 @@ with tab2:
     )
     st.plotly_chart(fig2, use_container_width=True)
 
-# ── Tab 3 ──────────────────────────────────────────────────────────────────────
 with tab3:
     yearly = (
         filtered_df.groupby(["year", "region"])[param_col]
@@ -295,7 +285,6 @@ with tab3:
 
 st.markdown("---")
 
-# ── Data Table ─────────────────────────────────────────────────────────────────
 st.subheader("📋 Data Table")
 st.caption(f"Showing {min(500, len(filtered_df)):,} of {len(filtered_df):,} records")
 st.dataframe(
